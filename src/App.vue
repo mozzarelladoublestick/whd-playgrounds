@@ -39,7 +39,6 @@ const getData = async () => {
 };
 const filteredData = computed(() => {
   if (!data.value.features) return [];
-  console.log("changed value to", selectedDistrict.value);
   return data.value.features.filter(
     (playground) => playground.properties.BEZIRK === selectedDistrict.value
   );
@@ -55,7 +54,6 @@ var map;
 
 let markers = [];
 function setupMap() {
-  console.log("setting up map");
   map = L.map("map").setView([48.21664832, 16.37190332], 13);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -66,32 +64,35 @@ function setupMap() {
 }
 
 function updateMap() {
+  console.log("updating", markers);
   markers.forEach((marker) => map.removeLayer(marker));
   markers.length = 0;
-  var greenIcon = L.icon({
-    iconUrl: "/icons/SW_Piktogramme_Standortzeichen.svg",
+  var icon = L.divIcon({
+    className: "",
+    html: `
+    <div class="white-bg marker-wrapper">
+      <img src="/icons/SW_Piktogramme_Standortzeichen.svg" alt="marker" />
+    </div>
+  `,
     iconSize: [38, 38],
-    className: "white-bg",
   });
   filteredData.value.forEach((playground) => {
     const marker = L.marker(
       [playground.geometry.coordinates[1], playground.geometry.coordinates[0]],
-      { icon: greenIcon }
+      { icon: icon }
     ).addTo(map);
-    marker.icon;
     marker.bindTooltip(
       `
-        <p class="tooltip"><strong>${
-          playground.properties.ANL_NAME
-        }</strong><br />
-        ${playground.properties.SPIELPLATZ_DETAIL.replace(/^,+\s*/, "")}</p>
+        <p class="tooltip"><strong>${playground.properties.ANL_NAME}</strong></p>
       `
     );
+    marker.featureId = playground.id;
     markers.push(marker);
   });
 
   nextTick(() => {
     if (markers.length > 0) {
+      console.log(markers);
       const bounds = L.latLngBounds(markers.map((m) => m.getLatLng()));
       map.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -99,17 +100,24 @@ function updateMap() {
 }
 
 function showOnMap(id) {
-  var playground = filteredData.value.filter(
+  var playground = filteredData.value.find(
     (playground) => playground.id === id
   );
-  console.log(playground[0].geometry.coordinates);
   map.setView(
-    [
-      playground[0].geometry.coordinates[1],
-      playground[0].geometry.coordinates[0],
-    ],
-    18
+    [playground.geometry.coordinates[1], playground.geometry.coordinates[0]],
+    15
   );
+}
+function startMarkerAnimation(id) {
+  var marker = markers.find((marker) => id === marker.featureId);
+  marker.getElement().querySelector(".marker-wrapper").classList.add("bounce");
+}
+function endMarkerAnimation(id) {
+  var marker = markers.find((marker) => id === marker.featureId);
+  marker
+    .getElement()
+    .querySelector(".marker-wrapper")
+    .classList.remove("bounce");
 }
 </script>
 
@@ -136,7 +144,11 @@ function showOnMap(id) {
             <wm-list type="row" gap="xs">
               <ul>
                 <li v-for="playground in filteredData" class="cursor-pointer">
-                  <div @click="showOnMap(playground.id)">
+                  <div
+                    @click="showOnMap(playground.id)"
+                    @mouseenter="startMarkerAnimation(playground.id)"
+                    @mouseleave="endMarkerAnimation(playground.id)"
+                  >
                     <strong>{{ playground.properties.ANL_NAME }}</strong>
                     <!--use Regex to remove commas and whitespaces of faulty entries-->
                     <p>
@@ -169,6 +181,7 @@ function showOnMap(id) {
 }
 #map {
   width: 44rem;
+  height: 31rem;
 }
 
 .list {
@@ -209,5 +222,26 @@ function showOnMap(id) {
   background-color: white;
   border-radius: 100%;
   aspect-ratio: 1/1;
+  z-index: 1000;
+}
+.leaflet-marker-icon.bounce {
+  animation: bounce 0.5s ease-in-out;
+}
+.bounce {
+  width: 38px;
+  height: 38px;
+  animation: bounce-animation 0.6s ease infinite;
+  transform-origin: center bottom;
+  display: inline-block;
+}
+
+@keyframes bounce-animation {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-40px);
+  }
 }
 </style>
