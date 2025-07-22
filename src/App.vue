@@ -70,8 +70,7 @@ function updateMap() {
   markers.length = 0;
   var greenIcon = L.icon({
     iconUrl: "/icons/SW_Piktogramme_Standortzeichen.svg",
-    iconSize: [38, 38], // size of the icon
-
+    iconSize: [38, 38],
     className: "white-bg",
   });
   filteredData.value.forEach((playground) => {
@@ -156,6 +155,8 @@ function showOnMap(id) {
         </div>
         <div id="map"></div>
       </div>
+      <!-- Live-Region -->
+      <div role="status" class="wm-h-vh"></div>
     </main>
   </teleport>
   <Footer></Footer>
