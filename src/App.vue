@@ -164,15 +164,30 @@ function showOnMap(id) {
 <style>
 .container {
   display: flex;
+  flex-direction: row;
   gap: 2rem;
 }
 #map {
-  height: 600px;
-  width: 600px;
+  width: 44rem;
 }
+
 .list {
-  max-height: 600px;
-  overflow-y: scroll;
+  max-height: 31rem;
+  overflow-y: auto;
+}
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  #map {
+    width: 100%;
+    height: 19rem;
+  }
+
+  .list {
+    max-height: 19rem;
+  }
 }
 @font-face {
   font-family: "WienerMelangeVF";
