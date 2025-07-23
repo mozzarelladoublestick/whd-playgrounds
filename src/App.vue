@@ -213,7 +213,7 @@ function endMarkerAnimation(id) {
 }
 
 .list {
-  max-height: 31rem;
+  max-height: 25.5rem;
   overflow-y: auto;
 }
 
@@ -302,5 +302,8 @@ function endMarkerAnimation(id) {
 }
 .margin-top {
   margin-top: 0.2rem;
+}
+:root {
+  --wm-theme-header-nav-height: 0rem;
 }
 </style>
