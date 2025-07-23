@@ -32,27 +32,45 @@ const districts = [
   { id: 23, name: "Liesing" },
 ];
 const data = ref([]);
-const selectedDistrict = ref(1);
+const selectedDistrict = ref(0);
+var map;
+var markers = [];
+var icon = L.divIcon({
+  className: "",
+  html: `
+    <div class="marker-wrapper">
+      <img src="/icons/SW_Piktogramme_Standortzeichen.svg" alt="marker" />
+      <div class="marker-tip"></div>
+    </div>
+  `,
+  iconSize: [38, 48],
+});
+var playgrounds = L.markerClusterGroup({ maxClusterRadius: 30 });
+
 const getData = async () => {
   const res = await fetch("/data/SPIELPLATZPUNKTOGD.json");
   return await res.json();
 };
+
 const filteredData = computed(() => {
   if (!data.value.features) return [];
+  if (selectedDistrict.value === 0) {
+    return data.value.features;
+  }
   return data.value.features.filter(
     (playground) => playground.properties.BEZIRK === selectedDistrict.value
   );
 });
+
 watch(filteredData, () => {
   updateMap();
 });
+
 onMounted(async () => {
   data.value = await getData();
   setupMap();
 });
-var map;
 
-let markers = [];
 function setupMap() {
   map = L.map("map").setView([48.21664832, 16.37190332], 13);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -64,37 +82,23 @@ function setupMap() {
 }
 
 function updateMap() {
-  console.log("updating", markers);
-  markers.forEach((marker) => map.removeLayer(marker));
   markers.length = 0;
-  var icon = L.divIcon({
-    className: "",
-    html: `
-    <div class="white-bg marker-wrapper">
-      <img src="/icons/SW_Piktogramme_Standortzeichen.svg" alt="marker" />
-    </div>
-  `,
-    iconSize: [38, 38],
-  });
+  playgrounds.clearLayers();
   filteredData.value.forEach((playground) => {
     const marker = L.marker(
       [playground.geometry.coordinates[1], playground.geometry.coordinates[0]],
       { icon: icon }
-    ).addTo(map);
-    marker.bindTooltip(
-      `
-        <p class="tooltip"><strong>${playground.properties.ANL_NAME}</strong></p>
-      `
     );
+    marker.bindTooltip(playground.properties.ANL_NAME);
     marker.featureId = playground.id;
     markers.push(marker);
+    playgrounds.addLayer(marker);
   });
-
+  map.addLayer(playgrounds);
   nextTick(() => {
     if (markers.length > 0) {
-      console.log(markers);
-      const bounds = L.latLngBounds(markers.map((m) => m.getLatLng()));
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(playgrounds.getBounds());
+      map.invalidateSize();
     }
   });
 }
@@ -105,19 +109,32 @@ function showOnMap(id) {
   );
   map.setView(
     [playground.geometry.coordinates[1], playground.geometry.coordinates[0]],
-    15
+    18
   );
+  startMarkerAnimation(id);
+  setTimeout(() => {
+    endMarkerAnimation(id);
+  }, 1200);
 }
+
 function startMarkerAnimation(id) {
   var marker = markers.find((marker) => id === marker.featureId);
-  marker.getElement().querySelector(".marker-wrapper").classList.add("bounce");
+  if (marker.getElement()) {
+    marker
+      .getElement()
+      .querySelector(".marker-wrapper")
+      .classList.add("bounce");
+  }
 }
+
 function endMarkerAnimation(id) {
   var marker = markers.find((marker) => id === marker.featureId);
-  marker
-    .getElement()
-    .querySelector(".marker-wrapper")
-    .classList.remove("bounce");
+  if (marker.getElement()) {
+    marker
+      .getElement()
+      .querySelector(".marker-wrapper")
+      .classList.remove("bounce");
+  }
 }
 </script>
 
@@ -131,6 +148,7 @@ function endMarkerAnimation(id) {
       <div class="container">
         <div>
           <select label="Bezirk" v-model="selectedDistrict">
+            <option :value="0">Ganz Wien</option>
             <option
               v-for="district in districts"
               :value="district.id"
@@ -179,6 +197,7 @@ function endMarkerAnimation(id) {
   flex-direction: row;
   gap: 2rem;
 }
+
 #map {
   width: 44rem;
   height: 31rem;
@@ -188,6 +207,7 @@ function endMarkerAnimation(id) {
   max-height: 31rem;
   overflow-y: auto;
 }
+
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
@@ -202,6 +222,7 @@ function endMarkerAnimation(id) {
     max-height: 19rem;
   }
 }
+
 @font-face {
   font-family: "WienerMelangeVF";
   src: url("https://assets.wien.gv.at/theme/202/fonts/WienerMelangeVF.woff2")
@@ -210,23 +231,49 @@ function endMarkerAnimation(id) {
   font-style: normal;
   font-display: swap;
 }
-.leaflet-tooltip {
+
+.leaflet-tooltip,
+.marker-cluster div {
   font-family: "WienerMelangeVF", sans-serif;
   font-size: 14px;
+  font-weight: bold;
   color: #333;
 }
+
 .cursor-pointer {
   cursor: pointer;
 }
-.white-bg {
+
+.marker-wrapper {
   background-color: white;
   border-radius: 100%;
   aspect-ratio: 1/1;
-  z-index: 1000;
+  z-index: 100;
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.marker-tip {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid white;
+  z-index: 200;
+}
+
 .leaflet-marker-icon.bounce {
   animation: bounce 0.5s ease-in-out;
 }
+
 .bounce {
   width: 38px;
   height: 38px;
