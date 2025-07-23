@@ -37,6 +37,11 @@ var map;
 var markers = [];
 var playgrounds = L.markerClusterGroup({ maxClusterRadius: 30 });
 
+onMounted(async () => {
+  data.value = await getData();
+  setupMap();
+});
+
 const getData = async () => {
   const res = await fetch("/data/SPIELPLATZPUNKTOGD.json");
   return await res.json();
@@ -54,11 +59,6 @@ const filteredData = computed(() => {
 
 watch(filteredData, () => {
   updateMap();
-});
-
-onMounted(async () => {
-  data.value = await getData();
-  setupMap();
 });
 
 function setupMap() {
@@ -117,7 +117,7 @@ function showOnMap(id) {
   startMarkerAnimation(id);
   setTimeout(() => {
     endMarkerAnimation(id);
-  }, 1200);
+  }, 1200); //play animation twice
 }
 
 function startMarkerAnimation(id) {
@@ -151,7 +151,7 @@ function endMarkerAnimation(id) {
       <div class="container">
         <div>
           <select label="Bezirk" v-model="selectedDistrict">
-            <option :value="0">Ganz Wien</option>
+            <option :value="0">Alle Bezirke</option>
             <option
               v-for="district in districts"
               :value="district.id"
