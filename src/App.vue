@@ -61,7 +61,7 @@ watch(filteredData, () => {
   updateMap();
 });
 
-function setupMap() {
+const setupMap = () => {
   map = L.map("map").setView([48.21664832, 16.37190332], 13);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -69,9 +69,9 @@ function setupMap() {
       '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
   updateMap();
-}
+};
 
-function updateMap() {
+const updateMap = () => {
   markers.length = 0;
   playgrounds.clearLayers();
   filteredData.value.forEach((playground) => {
@@ -104,9 +104,9 @@ function updateMap() {
       map.invalidateSize();
     }
   });
-}
+};
 
-function showOnMap(id) {
+const showOnMap = (id) => {
   var playground = filteredData.value.find(
     (playground) => playground.id === id
   );
@@ -118,9 +118,9 @@ function showOnMap(id) {
   setTimeout(() => {
     endMarkerAnimation(id);
   }, 1200); //play animation twice
-}
+};
 
-function startMarkerAnimation(id) {
+const startMarkerAnimation = (id) => {
   var marker = markers.find((marker) => id === marker.featureId);
   if (marker.getElement()) {
     marker
@@ -128,9 +128,9 @@ function startMarkerAnimation(id) {
       .querySelector(".marker-wrapper")
       .classList.add("bounce");
   }
-}
+};
 
-function endMarkerAnimation(id) {
+const endMarkerAnimation = (id) => {
   var marker = markers.find((marker) => id === marker.featureId);
   if (marker.getElement()) {
     marker
@@ -138,7 +138,7 @@ function endMarkerAnimation(id) {
       .querySelector(".marker-wrapper")
       .classList.remove("bounce");
   }
-}
+};
 </script>
 
 <template>
