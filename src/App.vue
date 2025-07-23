@@ -35,16 +35,6 @@ const data = ref([]);
 const selectedDistrict = ref(0);
 var map;
 var markers = [];
-var icon = L.divIcon({
-  className: "",
-  html: `
-    <div class="marker-wrapper">
-      <img src="/icons/SW_Piktogramme_Standortzeichen.svg" alt="marker" />
-      <div class="marker-tip"></div>
-    </div>
-  `,
-  iconSize: [38, 48],
-});
 var playgrounds = L.markerClusterGroup({ maxClusterRadius: 30 });
 
 const getData = async () => {
@@ -85,15 +75,28 @@ function updateMap() {
   markers.length = 0;
   playgrounds.clearLayers();
   filteredData.value.forEach((playground) => {
+    const icon = L.divIcon({
+      className: "",
+      html: `
+    <div class="marker-wrapper" role="img" aria-label="${playground.properties.ANL_NAME}">
+      <img src="/icons/SW_Piktogramme_Standortzeichen.svg"  alt="${playground.properties.ANL_NAME}" />
+      <div class="marker-tip"></div>
+    </div>
+  `,
+      iconSize: [38, 48],
+    });
     const marker = L.marker(
       [playground.geometry.coordinates[1], playground.geometry.coordinates[0]],
-      { icon: icon }
+      {
+        icon: icon,
+      }
     );
     marker.bindTooltip(playground.properties.ANL_NAME);
     marker.featureId = playground.id;
     markers.push(marker);
     playgrounds.addLayer(marker);
   });
+
   map.addLayer(playgrounds);
   nextTick(() => {
     if (markers.length > 0) {
@@ -157,7 +160,9 @@ function endMarkerAnimation(id) {
               {{ district.id }}., {{ district.name }}
             </option>
           </select>
-          <p>Gefundene Spielplätze: {{ filteredData.length }}</p>
+          <p class="margin-top">
+            Gefundene Spielplätze: {{ filteredData.length }}
+          </p>
           <div class="list">
             <wm-list type="row" gap="xs">
               <ul>
@@ -183,7 +188,11 @@ function endMarkerAnimation(id) {
             >
           </div>
         </div>
-        <div id="map"></div>
+        <div
+          id="map"
+          role="application"
+          aria-label="Interaktive Karte von Wien mit Spielplätzen"
+        ></div>
       </div>
       <!-- Live-Region -->
       <div role="status" class="wm-h-vh"></div>
@@ -290,5 +299,8 @@ function endMarkerAnimation(id) {
   50% {
     transform: translateY(-40px);
   }
+}
+.margin-top {
+  margin-top: 0.2rem;
 }
 </style>
