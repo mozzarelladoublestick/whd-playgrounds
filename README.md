@@ -1,15 +1,12 @@
 # whd-playgrounds
 
-This template should help get you started developing with Vue 3 in Vite.
+Diese Vue 3 Webanwendung zeigt eine Übersicht der [Spielplätze](https://www.data.gv.at/katalog/dataset/bd8b518b-d812-46f9-b367-4c1b660cfc99#resources) in Wien auf einer Karte mit Möglichkeit zur Filterung nach Bezirk.
 
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
+## Tech-Stack
+- Vue 3
+- [Handbuch Wien Pattern Library](https://handbuch.wien.gv.at/pattern-library/)
+- [Leaflet.js](https://leafletjs.com/)
+  
 ## Project Setup
 
 ```sh
