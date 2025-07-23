@@ -1,36 +1,9 @@
 <script setup>
 import Header from "./components/Header.vue";
 import Footer from "./components/Footer.vue";
-import { computed, onMounted } from "vue";
-import { ref } from "vue";
-import { nextTick } from "vue";
-import { watch } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
+import districts from "../public/data/districts";
 
-const districts = [
-  { id: 1, name: "Innere Stadt" },
-  { id: 2, name: "Leopoldstadt" },
-  { id: 3, name: "Landstraße" },
-  { id: 4, name: "Wieden" },
-  { id: 5, name: "Margareten" },
-  { id: 6, name: "Mariahilf" },
-  { id: 7, name: "Neubau" },
-  { id: 8, name: "Josefstadt" },
-  { id: 9, name: "Alsergrund" },
-  { id: 10, name: "Favoriten" },
-  { id: 11, name: "Simmering" },
-  { id: 12, name: "Meidling" },
-  { id: 13, name: "Hietzing" },
-  { id: 14, name: "Penzing" },
-  { id: 15, name: "Rudolfsheim-Fünfhaus" },
-  { id: 16, name: "Ottakring" },
-  { id: 17, name: "Hernals" },
-  { id: 18, name: "Währing" },
-  { id: 19, name: "Döbling" },
-  { id: 20, name: "Brigittenau" },
-  { id: 21, name: "Floridsdorf" },
-  { id: 22, name: "Donaustadt" },
-  { id: 23, name: "Liesing" },
-];
 const data = ref([]);
 const selectedDistrict = ref(0);
 var map;
@@ -72,9 +45,10 @@ const setupMap = () => {
 };
 
 const updateMap = () => {
+  const features = filteredData.value;
   markers.length = 0;
   playgrounds.clearLayers();
-  filteredData.value.forEach((playground) => {
+  features.forEach((playground) => {
     const icon = L.divIcon({
       className: "",
       html: `
@@ -114,30 +88,21 @@ const showOnMap = (id) => {
     [playground.geometry.coordinates[1], playground.geometry.coordinates[0]],
     18
   );
-  startMarkerAnimation(id);
-  setTimeout(() => {
-    endMarkerAnimation(id);
-  }, 1200); //play animation twice
+  animateMarker(id);
 };
 
-const startMarkerAnimation = (id) => {
-  var marker = markers.find((marker) => id === marker.featureId);
-  if (marker.getElement()) {
-    marker
-      .getElement()
-      .querySelector(".marker-wrapper")
-      .classList.add("bounce");
-  }
-};
-
-const endMarkerAnimation = (id) => {
-  var marker = markers.find((marker) => id === marker.featureId);
-  if (marker.getElement()) {
-    marker
-      .getElement()
-      .querySelector(".marker-wrapper")
-      .classList.remove("bounce");
-  }
+const animateMarker = (id) => {
+  const marker = markers.find((marker) => id === marker.featureId);
+  const el = marker?.getElement()?.querySelector(".marker-wrapper");
+  if (!el) return;
+  el.classList.remove("bounce");
+  void el.offsetWidth;
+  el.classList.add("bounce");
+  const handleAnimationEnd = () => {
+    el.classList.remove("bounce");
+    el.removeEventListener("animationend", handleAnimationEnd);
+  };
+  el.addEventListener("animationend", handleAnimationEnd);
 };
 </script>
 
@@ -169,17 +134,16 @@ const endMarkerAnimation = (id) => {
                 <li v-for="playground in filteredData" class="cursor-pointer">
                   <div
                     @click="showOnMap(playground.id)"
-                    @mouseenter="startMarkerAnimation(playground.id)"
-                    @mouseleave="endMarkerAnimation(playground.id)"
+                    @mouseenter="animateMarker(playground.id)"
                   >
                     <strong>{{ playground.properties.ANL_NAME }}</strong>
                     <!--use Regex to remove commas and whitespaces of faulty entries-->
                     <p>
                       {{
-                        playground.properties.SPIELPLATZ_DETAIL.replace(
+                        playground.properties.SPIELPLATZ_DETAIL?.replace(
                           /^,+\s*/,
                           ""
-                        )
+                        ) ?? ""
                       }}
                     </p>
                   </div>
@@ -286,7 +250,7 @@ const endMarkerAnimation = (id) => {
 .bounce {
   width: 38px;
   height: 38px;
-  animation: bounce-animation 0.6s ease infinite;
+  animation: bounce-animation 0.6s ease 2;
   transform-origin: center bottom;
   display: inline-block;
 }
