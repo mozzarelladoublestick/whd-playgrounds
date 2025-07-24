@@ -1,7 +1,7 @@
 <script setup>
 import Header from "./components/Header.vue";
 import Footer from "./components/Footer.vue";
-import { ref, computed, watch, onMounted, nextTick } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import districts from "../public/data/districts";
 
 const data = ref([]);
@@ -12,7 +12,7 @@ var playgrounds = L.markerClusterGroup({ maxClusterRadius: 30 });
 
 onMounted(async () => {
   data.value = await getData();
-  setupMap();
+  setUpMap();
 });
 
 const getData = async () => {
@@ -34,7 +34,7 @@ watch(filteredData, () => {
   updateMap();
 });
 
-const setupMap = () => {
+const setUpMap = () => {
   map = L.map("map").setView([48.21664832, 16.37190332], 13);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -72,12 +72,8 @@ const updateMap = () => {
   });
 
   map.addLayer(playgrounds);
-  nextTick(() => {
-    if (markers.length > 0) {
-      map.fitBounds(playgrounds.getBounds());
-      map.invalidateSize();
-    }
-  });
+  map.fitBounds(playgrounds.getBounds());
+  map.invalidateSize();
 };
 
 const showOnMap = (id) => {
